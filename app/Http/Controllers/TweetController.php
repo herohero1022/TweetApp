@@ -3,82 +3,66 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Auth;
+use App\Tweet;
+use App\Uesr;
+use App\Comment;
 
-class TweetController extends Controller
+class Tweetcontroller extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $items = Tweet::with('user')->simplePaginate(5);
+        return view('tweet.index', ['items' => $items]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
-        //
+        $item = Tweet::find($id);
+        $auths = Auth::user();
+        $commnets = Comment::where('tweet_id',$id)->get();
+        return view('tweet.show', ['item' => $item, 'comments' => $commnets, 'auths' => $auths]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    public function add(Request $request)
+    {
+        $auths = Auth::user();
+        return view('tweet.add',['auths' => $auths]);
+    }
+
+    public function store(Request $request)
+    {
+        $tweet = new Tweet;
+        $form = $request->all();
+        unset($form['_token']);
+        $tweet->fill($form)->save();
+        return redirect('/tweet');
+    }
+
     public function edit($id)
     {
-        //
+        $item = Tweet::find($id);
+        return view('tweet.edit', ['item' => $item]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        //
+        $tweet = Tweet::find($request->id);
+        $form = $request->all();
+        unset($form['_token']);
+        $tweet->fill($form)->save();
+        return redirect('/tweet');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
+    public  function delete($id)
     {
-        //
+        $item = Tweet::find($id);
+        return view('tweet.delete', ['item' => $item]);
+    }
+
+    public function remove(Request $request)
+    {
+        Tweet::find($request->id)->delete();
+        return redirect('/tweet');
     }
 }
